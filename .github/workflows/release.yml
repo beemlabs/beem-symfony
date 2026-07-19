@@ -1,0 +1,52 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+env:
+  SDK_NAME: Beem Symfony SDK
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Generate release notes
+        run: |
+          VERSION="${{ inputs.version }}"
+          PREV=$(git describe --tags --abbrev=0 2>/dev/null || true)
+          RANGE=${PREV:+$PREV..HEAD}
+
+          subjects() { git log $RANGE --pretty=%s | grep -E "$1" | sed -E 's/^[a-z]+(\([^)]*\))?!?: //' | sed 's/^./\U&/' | sed 's/^/- /' || true; }
+          FEATURES=$(subjects '^feat')
+          FIXES=$(subjects '^fix')
+          OTHER=$(git log $RANGE --pretty=%s | grep -vE '^(feat|fix)' | grep -vE '^chore: initialize' | sed -E 's/^[a-z]+(\([^)]*\))?!?: //' | sed 's/^./\U&/' | sed 's/^/- /' || true)
+
+          {
+            echo "The Beem SDK team is happy to announce the immediate availability of $SDK_NAME $VERSION."
+            echo
+            if [ -n "$FEATURES" ]; then echo "### Features"; echo; echo "$FEATURES"; echo; fi
+            if [ -n "$FIXES" ]; then echo "### Bug Fixes"; echo; echo "$FIXES"; echo; fi
+            if [ -n "$OTHER" ]; then echo "### Other Changes"; echo; echo "$OTHER"; echo; fi
+            if [ -z "$FEATURES$FIXES$OTHER" ]; then echo "### Features"; echo; echo "- Initial release."; echo; fi
+            if [ -n "$PREV" ]; then
+              echo "**Full changelog:** [$PREV...$VERSION](https://github.com/${{ github.repository }}/compare/$PREV...$VERSION)"
+            fi
+          } > RELEASE_NOTES.md
+          cat RELEASE_NOTES.md
+
+      - name: Create tag and GitHub release
+        run: gh release create "${{ inputs.version }}" --title "${{ inputs.version }}" --notes-file RELEASE_NOTES.md
+        env:
+          GH_TOKEN: ${{ github.token }}
