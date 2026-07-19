@@ -1,0 +1,43 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  code-style:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.3'
+          coverage: none
+      # beemlabs/beem-php resolves via a composer path repository at ../beem-php.
+      # SPLIT_TOKEN (org secret) is needed while the repo is private; anonymous clone works once public.
+      - run: git clone --depth=1 "https://${SPLIT_TOKEN:+x-access-token:$SPLIT_TOKEN@}github.com/beemlabs/beem-php.git" ../beem-php
+        env:
+          SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+      - run: composer install --prefer-dist --no-progress
+      - run: composer cs:check
+
+  tests:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        php: ['8.2', '8.3', '8.4']
+    steps:
+      - uses: actions/checkout@v4
+      - uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ matrix.php }}
+          coverage: none
+      # beemlabs/beem-php resolves via a composer path repository at ../beem-php.
+      # SPLIT_TOKEN (org secret) is needed while the repo is private; anonymous clone works once public.
+      - run: git clone --depth=1 "https://${SPLIT_TOKEN:+x-access-token:$SPLIT_TOKEN@}github.com/beemlabs/beem-php.git" ../beem-php
+        env:
+          SPLIT_TOKEN: ${{ secrets.SPLIT_TOKEN }}
+      - run: composer install --prefer-dist --no-progress
+      - run: composer test

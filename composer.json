@@ -1,0 +1,59 @@
+{
+    "name": "beemlabs/beem-symfony",
+    "description": "Symfony bundle for the Beem SDK — auto-traces HTTP, Doctrine, Console, Messenger.",
+    "license": "MIT",
+    "type": "symfony-bundle",
+    "keywords": ["apm", "monitoring", "tracing", "errors", "beem", "symfony"],
+    "require": {
+        "php": ">=8.2",
+        "beemlabs/beem-php": "^0.1",
+        "symfony/http-kernel": "^6.4 || ^7.0",
+        "symfony/event-dispatcher": "^6.4 || ^7.0",
+        "symfony/console": "^6.4 || ^7.0",
+        "symfony/config": "^6.4 || ^7.0",
+        "symfony/dependency-injection": "^6.4 || ^7.0",
+        "symfony/http-foundation": "^6.4 || ^7.0"
+    },
+    "require-dev": {
+        "pestphp/pest": "^3.0",
+        "symfony/framework-bundle": "^6.4 || ^7.0",
+        "doctrine/dbal": "^3.2 || ^4.0",
+        "symfony/messenger": "^6.4 || ^7.0",
+        "friendsofphp/php-cs-fixer": "^3.75"
+    },
+    "suggest": {
+        "doctrine/dbal": "For automatic db.query span instrumentation",
+        "symfony/messenger": "For queued message instrumentation"
+    },
+    "autoload": {
+        "psr-4": {
+            "Beem\\SymfonyBundle\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Beem\\SymfonyBundle\\Tests\\": "tests/"
+        }
+    },
+    "scripts": {
+        "test": "pest",
+        "cs:check": "php-cs-fixer fix --dry-run --diff",
+        "cs:fix": "php-cs-fixer fix"
+    },
+    "config": {
+        "allow-plugins": {
+            "pestphp/pest-plugin": true
+        }
+    },
+    "repositories": [
+        {
+            "type": "path",
+            "url": "../beem-php",
+            "options": {
+                "versions": {
+                    "beemlabs/beem-php": "0.1.0"
+                }
+            }
+        }
+    ]
+}

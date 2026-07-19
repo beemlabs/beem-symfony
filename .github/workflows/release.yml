@@ -1,0 +1,25 @@
+name: Release
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version tag (e.g. v0.1.0)'
+        required: true
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Build release archive
+        run: git archive --format=zip --prefix=beem-symfony/ --output=beem-symfony-${{ inputs.version }}.zip HEAD
+
+      - name: Create tag and GitHub release
+        run: gh release create "${{ inputs.version }}" "beem-symfony-${{ inputs.version }}.zip" --title "${{ inputs.version }}" --generate-notes
+        env:
+          GH_TOKEN: ${{ github.token }}
